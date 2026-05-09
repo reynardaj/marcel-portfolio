@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
-import { projects, categories } from '@/lib/projects';
+import { Project, categories } from '@/lib/projects';
 
-export function ProjectsSection() {
+export function ProjectsSection({ projects = [] }: { projects: Project[] }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 

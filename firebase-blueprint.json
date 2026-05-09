@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A portfolio project entry.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "tags": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "overview": { "type": "string" },
+            "problem": { "type": "string" },
+            "approach": { 
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "result": { "type": "string" }
+          },
+          "required": ["overview", "problem", "approach", "result"]
+        },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "description", "image", "tags", "content", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "The collection of portfolio projects."
+    }
+  }
+}

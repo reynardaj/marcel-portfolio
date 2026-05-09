@@ -1,20 +1,14 @@
 import { notFound } from 'next/navigation';
-import { projects } from '@/lib/projects';
+import { getProject } from '@/lib/projects';
 import { Hero3DModel } from '@/components/hero-3d-model';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 
-export async function generateStaticParams() {
-  return projects.map((project) => ({
-    id: project.id,
-  }));
-}
-
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const project = projects.find((p) => p.id === id);
+  const project = await getProject(id);
 
   if (!project) {
     notFound();

@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (request.auth.token.email == "reynard.joshua4949@gmail.com" || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    function isValidProjectCreate(data) {
+      return data.keys().hasAll(['id', 'title', 'category', 'description', 'image', 'tags', 'content', 'createdAt', 'updatedAt']) 
+        && data.keys().size() == 9
+        && data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 100
+        && data.description is string && data.description.size() <= 1000
+        && data.image is string && data.image.size() <= 500
+        && data.tags is list && data.tags.size() <= 20 
+        && (data.tags.size() == 0 || data.tags[0] is string)
+        && data.content is map
+        && data.content.keys().hasAll(['overview', 'problem', 'approach', 'result'])
+        && data.content.keys().size() == 4
+        && data.content.overview is string && data.content.overview.size() <= 5000
+        && data.content.problem is string && data.content.problem.size() <= 5000
+        && data.content.approach is list && data.content.approach.size() <= 20
+        && (data.content.approach.size() == 0 || data.content.approach[0] is string)
+        && data.content.result is string && data.content.result.size() <= 5000
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+    
+    function isValidProjectUpdate(data) {
+      return data.title is string && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 100
+        && data.description is string && data.description.size() <= 1000
+        && data.image is string && data.image.size() <= 500
+        && data.tags is list && data.tags.size() <= 20 
+        && (data.tags.size() == 0 || data.tags[0] is string)
+        && data.content is map
+        && data.content.keys().hasAll(['overview', 'problem', 'approach', 'result'])
+        && data.content.keys().size() == 4
+        && data.content.overview is string && data.content.overview.size() <= 5000
+        && data.content.problem is string && data.content.problem.size() <= 5000
+        && data.content.approach is list && data.content.approach.size() <= 20
+        && (data.content.approach.size() == 0 || data.content.approach[0] is string)
+        && data.content.result is string && data.content.result.size() <= 5000
+        && data.updatedAt == request.time;
+    }
+
+    match /admins/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /projects/{projectId} {
+      allow read: if true; 
+      
+      allow create: if isAdmin() 
+        && isValidId(projectId)
+        && isValidProjectCreate(incoming())
+        && incoming().id == projectId;
+        
+      allow update: if isAdmin()
+        && isValidId(projectId)
+        && isValidProjectUpdate(incoming())
+        && incoming().id == existing().id 
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'description', 'image', 'tags', 'content', 'updatedAt']);
+        
+      allow delete: if isAdmin() && isValidId(projectId);
+    }
+  }
+}
